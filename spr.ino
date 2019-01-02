@@ -8,6 +8,9 @@
   http://www.arduino.cc/en/Tutorial/DigitalReadSerial
 */
 
+//test
+
+
 // digital pins pushbutton
 int pb1 = 2;
 int pb2 = 3;
