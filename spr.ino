@@ -38,7 +38,7 @@ unsigned long previousMillis;
 
 void readPushButton(void);
 void readLocationSensor(void);
-void readCmd(void);
+int readCmd(void);
 void processEvent(void);
 
 // the setup routine runs once when you press reset:
@@ -143,26 +143,36 @@ void readLocationSensor()
 	PreLocationL = curLocationL;
 }
 
-void readCmd()
+int readCmd()
 {
-	static String strInput;
-	static int num;
-	
-	/*
-	String stringOne =  String(13);
-	Serial.println(stringOne);
-	Serial.println(stringOne,HEX);
-	*/
-	
+	String strInput;
+	int cmdTmp = 0;
+	int cmd = 0;
+		
 	if (Serial.available() > 0)
 	{
-		strInput = Serial.readString(); // read the incoming byte:	
-		Serial.print(" I received:");
-		//num  = String(strInput, DEC);
+		strInput = Serial.readString();
+		Serial.print("strInput:");
 		Serial.println(strInput);
+		if(strInput.endsWith("\r"))
+		{
+			Serial.print("strInput r:");
+			Serial.println(strInput);
+			cmdTmp = strInput.toInt();
+			Serial.print("cmdTmp :");
+			Serial.println(cmdTmp, DEC);
+						
+				
+			cmdTmp = strInput.toInt();	
+			cmd |= (cmdTmp/100 > 0 ? 1 : 0) << 2;
+			cmd |= (cmdTmp%100/10 > 0 ? 1 : 0) << 1;
+			cmd |= (cmdTmp%100%10 > 0 ? 1 : 0) << 0;
+			Serial.print("cmd: ");
+			Serial.println(cmd, HEX);
+		}
 	}
 	
-	
+	return cmd;
 }
 
 void processEvent()
