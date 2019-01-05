@@ -356,6 +356,7 @@ int getStatuLocationSensorL(void)
 {
 	return digitalRead(DET_L) == LOW? SPR_SENSOR_HELD:SPR_SENSOR_RELEASE;
 }
+
 /*
 ************************************************************************************************************************
 *                                        readCmd
@@ -550,7 +551,6 @@ void motorRotPwrCtrl(int onOff)
 		digitalWrite(M_ROT_PWR, LOW);
 	}
 }
-
 
 /*
 ************************************************************************************************************************
