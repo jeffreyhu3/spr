@@ -76,8 +76,9 @@ int getEventLocationSensorL(void);
 // the setup routine runs once when you press reset:
 void setup() {
 	// initialize serial communication at 9600 bits per second:
-	Serial.begin(115200);
-
+	Serial.begin(9600);
+	//Serial.setTimeout(350);	/* sets the maximum milliseconds to wait for serial data Serial.readString */
+	
 	// make the pushbutton pins as input and internal pull-up
 	pinMode(PB1, INPUT);
 	digitalWrite(PB1, HIGH); 
@@ -124,14 +125,12 @@ void loop()
 	}
 	else
 	{
-		/*
 		cmd = readCmd();
 		if(cmd != -1)
 		{
-			Serial.println("valid command");
-			Serial.println(cmd, HEX);
+			Serial.print("cmd=0b");
+			Serial.println(cmd, BIN);
 		}
-		*/
 	}
 }
 
@@ -383,26 +382,27 @@ int readCmd()
 	if (Serial.available() > 0)
 	{
 		strInput = Serial.readString();
-		Serial.print("strInput:");
-		Serial.println(strInput);
+		//Serial.print("strInput:");
+		//Serial.println(strInput);
 		if(strInput.endsWith("\r"))
 		{
+			/*
 			Serial.print("strInput r:");
 			Serial.println(strInput);
-			cmdTmp = strInput.toInt();
-			Serial.print("cmdTmp :");
-			Serial.println(cmdTmp, DEC);
-						
-				
+			*/
 			cmdTmp = strInput.toInt();	
+			cmd = 0;
 			cmd |= (cmdTmp/100 > 0 ? 1 : 0) << 2;
 			cmd |= (cmdTmp%100/10 > 0 ? 1 : 0) << 1;
 			cmd |= (cmdTmp%100%10 > 0 ? 1 : 0) << 0;
 			/*
-			Serial.print("cmd: ");
-			Serial.println(cmd, HEX);
-			Serial.println(cmd, DEC);
+			Serial.print("cmdTmp:0x ");
+			Serial.println(cmdTmp, HEX);
+			Serial.print("cmd:0b ");
+			Serial.println(cmd, BIN);
 			*/
+			
+			return cmd;
 		}
 	}
 	
