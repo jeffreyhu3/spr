@@ -49,9 +49,12 @@
 */
 int EventPb1;
 int EventPb2;
+int EventPb1Cmd;
+int EventPb2Cmd;
 int EventDET_R;	
 int EventDET_L;	
 int EventPump;
+int EventPumpCmd;
 unsigned long currentMillis;
 unsigned long previousMillis;
 
@@ -72,12 +75,15 @@ void motorRotDir(int right);
 void pumpPwrCtrl(int onOff);
 int getEventLocationSensorR(void);
 int getEventLocationSensorL(void);
+int ParsingCmdToPB1(void);
+int ParsingCmdToPB2(void);
+int ParsingCmdToPumpPB(void);
+void ParsingCmd(int cmd);
 
 // the setup routine runs once when you press reset:
 void setup() {
 	// initialize serial communication at 9600 bits per second:
 	Serial.begin(9600);
-	//Serial.setTimeout(350);	/* sets the maximum milliseconds to wait for serial data Serial.readString */
 	
 	// make the pushbutton pins as input and internal pull-up
 	pinMode(PB1, INPUT);
@@ -118,10 +124,9 @@ void loop()
 	currentMillis = millis();	
 	if ((currentMillis - previousMillis) > MAIN_LOOP_CYCLE)
 	{
-		//Serial.println(currentMillis);
 		previousMillis = previousMillis + MAIN_LOOP_CYCLE;
 		updateLocationSensor();
-		processEvent(readPB1(),readPB2(),readPumpPB());
+		processEvent(readPB1() | ParsingCmdToPB1(),readPB2() | ParsingCmdToPB2() ,readPumpPB() | ParsingCmdToPumpPB());
 	}
 	else
 	{
@@ -130,6 +135,15 @@ void loop()
 		{
 			Serial.print("cmd=0b");
 			Serial.println(cmd, BIN);
+			ParsingCmd(cmd);
+			/*
+			Serial.print("EventPb1Cmd=0b");
+			Serial.println(EventPb1Cmd, BIN);
+			Serial.print("EventPb2Cmd=0b");
+			Serial.println(EventPb2Cmd, BIN);
+			Serial.print("EventPumpCmd=0b");
+			Serial.println(EventPumpCmd, BIN);
+			*/
 		}
 	}
 }
@@ -382,25 +396,13 @@ int readCmd()
 	if (Serial.available() > 0)
 	{
 		strInput = Serial.readString();
-		//Serial.print("strInput:");
-		//Serial.println(strInput);
 		if(strInput.endsWith("\r"))
 		{
-			/*
-			Serial.print("strInput r:");
-			Serial.println(strInput);
-			*/
 			cmdTmp = strInput.toInt();	
 			cmd = 0;
 			cmd |= (cmdTmp/100 > 0 ? 1 : 0) << 2;
 			cmd |= (cmdTmp%100/10 > 0 ? 1 : 0) << 1;
 			cmd |= (cmdTmp%100%10 > 0 ? 1 : 0) << 0;
-			/*
-			Serial.print("cmdTmp:0x ");
-			Serial.println(cmdTmp, HEX);
-			Serial.print("cmd:0b ");
-			Serial.println(cmd, BIN);
-			*/
 			
 			return cmd;
 		}
@@ -597,4 +599,77 @@ void pumpPwrCtrl(int onOff)
 	{
 		digitalWrite(PUMP_PWR, LOW);
 	}
+}
+
+
+/*
+************************************************************************************************************************
+*                                              ParsingCmdToPB1
+*
+* Description: read command for pump on/off event, then clear it before return.
+*
+* Arguments  : EventPb1CmdTmp, 1 has a event simulink PB1 prssed
+*
+* Note(s)    : none
+************************************************************************************************************************
+*/
+int ParsingCmdToPB1(void)
+{
+	int EventPb1CmdTmp = EventPb1Cmd;
+	EventPb1Cmd = 0;
+	return EventPb1CmdTmp;
+}
+
+/*
+************************************************************************************************************************
+*                                              ParsingCmdToPB2
+*
+* Description: read command for pump on/off event, then clear it before return.
+*
+* Arguments  : EventPb2Cmd, 1 has a event simulink PB2 prssed
+*
+* Note(s)    : none
+************************************************************************************************************************
+*/
+int ParsingCmdToPB2(void)
+{
+	int EventPb2CmdTmp = EventPb2Cmd;
+	EventPb2CmdTmp = 0;
+	return EventPb2Cmd;
+}
+
+/*
+************************************************************************************************************************
+*                                              ParsingCmdToPumpPB
+*
+* Description: read command for pump on/off event, then clear it before return.
+*
+* Arguments  : EventPumpCmdTmp, 1 has a event reverse pump motor status
+*
+* Note(s)    : none
+************************************************************************************************************************
+*/
+int ParsingCmdToPumpPB(void)
+{
+	int EventPumpCmdTmp = EventPumpCmd;
+	EventPumpCmd = 0;
+	return EventPumpCmdTmp;
+}
+
+/*
+************************************************************************************************************************
+*                                              ParsingCmd
+*
+* Description: Parsing command read from serail port, save to each global variable.
+*
+* Arguments  : cmd, command from serial port
+*
+* Note(s)    : none
+************************************************************************************************************************
+*/
+void ParsingCmd(int cmd)
+{
+	EventPb1Cmd = (cmd & 0x04) >> 2;
+	EventPb2Cmd = (cmd & 0x02) >> 1;
+	EventPumpCmd = (cmd & 0x01) >> 0;	
 }
